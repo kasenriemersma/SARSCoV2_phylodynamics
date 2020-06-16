@@ -1,0 +1,30 @@
+#!/bin/sh
+
+### generate downsampled fasta with sequences from area of interest ###
+sed 's/>//g' downsampled_global_names.txt > downsampled_global_names_2.txt
+cat ./downsampled_global_names_2.txt ./NAMES_OF_SEQUENCES_OF_INTEREST.txt > downsampled_AREAOFINTEREST_names.txt
+
+seqtk subseq ./dates_filtered_CDS_global.fasta ./downsampled_AREAOFINTEREST_names.txt > CDS_downsampled_global_AREAOFINTEREST.fasta
+
+### Mafft align sequences ###
+mafft --thread 8 CDS_downsampled_global_AREAOFINTEREST.fasta > mafft_CDS_downsampled_global_AREAOFINTEREST
+
+### Generate maximum likelihood tree ###
+iqtree -s ./dates_filtered_CDS_global.fasta -m HKY+F+I+G4 -nt AUTO
+
+### Remove outlier tips; further downsample in a time-stratified manner but retain closest cophenetic tips ###
+RSCRIPT output timestrat_closest_names.txt
+
+### Subset sequences ###
+seqtk subseq ./filtered_CDS_global.fasta ./timestrat_closest_names.txt > timestrat_closest_global_AREAOFINTEREST.fasta
+
+### Replace / and | in sequence names ###
+sed 's/\//_/g' timestrat_closest_global_AREAOFINTEREST.fasta > timestrat_closest_global_AREAOFINTEREST_labelcorrected1.fasta
+sed 's/\|/_/g' timestrat_closest_global_AREAOFINTEREST_labelcorrected1.fasta > timestrat_closest_global_AREAOFINTEREST_labelcorrected2.fasta
+
+### Append Il and exog tags ###
+seqtk subseq ./timestrat_closest_global_AREAOFINTEREST_labelcorrected2.fasta ./NAMES_OF_SEQUENCES_OF_INTEREST.txt > timestrat_closest_GMA_labelcorrected.fasta
+~/Bioinformatics/filter_fasta_by_list_of_headers.py ./timestrat_closest_global_AREAOFINTEREST_labelcorrected2.fasta ./NAMES_OF_SEQUENCES_OF_INTEREST.txt > timestrat_closest_global_labelcorrected.fasta
+
+sed '/^>/ s/$/_Il/' timestrat_closest_GMA_labelcorrected.fasta > timestrat_closest_GMA_Il.fasta
+sed '/^>/ s/$/_exog/' timestrat_closest_global_labelcorrected.fasta > timestrat_closest_global_exog.fasta

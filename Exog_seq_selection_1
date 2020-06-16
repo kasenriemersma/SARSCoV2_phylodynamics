@@ -1,0 +1,30 @@
+#!/bin/sh
+
+### Trim global FASTA to only CDS ###
+cutadapt -g AGATCTGTTCTCTAAACGAACTTTAAAATCTGTGTGGCTGTCACTCGGCTGCATGCTTAGTGCACTCACGCAGTATAATTAATAACTAATTACTGTCGTTGACAGGACACGAGTAACTCGTCTATCTTCTGCAGGCTGCTTACGGTTTCGTCCGTGTTGCAGCCGATCATCAGCACATCTAGGTTTTGTCCGGGTGTGACCGAAAGGTAAG -o 5trim_global.fasta ./global.fasta
+
+cutadapt -a CAATCTTTAATCAGTGTGTAACATTAGGGAGGACTTGAAAGAGCCACCACATTTTCACCGAGGCCACGCGGAGTACGATCGAGTGTACAGTGAACAATGCTAGGGAGAGCTGCCTATATGGAAGAGCCCTAATGTGTAAAATTAATTTTAGTAGTGCTATCC -o CDS_global.fasta ./5trim_global.fasta
+
+### Replace spaces in sequence names and sequences ###
+sed '/^>/ s/\s /_/g' ./CDS_global.fasta > corrected_CDS_global.fasta
+
+sed 's/ //g' ./corrected_CDS_global.fasta > final_CDS_global.fasta
+
+### Filter sequences by length and Ns ###
+cutadapt -l 29406 -m 29406 --max-n 294 -o filtered_CDS_global.fasta ./final_CDS_global.fasta
+
+### Extract names of sequences with accurate collection dates in Excel ###
+sed -n '/>/p' final_CDS_global.fasta > names1.txt
+sed -n '/2019-..-..$/p; /2020-..-..$/p' names1.txt > names2.txt
+sed 's/>//g' names2.txt > names3.txt
+
+### Subset sequences only for those with good dates ###
+seqtk subseq ./filtered_CDS_global.fasta ./names3.txt > dates_filtered_CDS_global.fasta
+
+### Filter sequences of interest ###
+~/Bioinformatics/filter_fasta_by_list_of_headers.py ./dates_filtered_CDS_global.fasta ./NAMES_OF_SEQUENCES_OF_INTEREST.txt > global_INTERESTFILTERED.fasta
+
+### Randomly downsample global sequences to speed up tree generation ###
+sed -n '/>/p' global_INTERESTFILTERED.fasta > global_INTERESTFILTERED_names.txt
+
+RSCRIPT output downsampled_global_names.txt
