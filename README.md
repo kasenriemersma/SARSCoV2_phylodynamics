@@ -1,8 +1,11 @@
 # SARSCoV2_phylodynamics
 
-The scripts in this repo are for downsampling a global SARS-CoV-2 and then further downsampling sequences exogenous to a region of interest in a time-stratified manner. Exogenous sequences are randomly downsampled and then exogenous sequences that are closest cophenetic neighbors to sequences from the region of interest are added back, if not already present.
+The bash and R scripts in this repo can be used for the following tasks:
+1) Downsample a global SARS-CoV-2 FASTA and then further downsample sequences exogenous to a region of interest in a time-stratified manner. 
+1) Randomly select exogenous sequences, including the closest cophenetic neighbors to sequences from the region of interest.
+1) Summarize and visualize cumulative incidence, prevalance, and instantaneous incidence from BEAST2::Phydyn trajectory files.
 
-The Exog_seq_selection bash scripts are a pipeline that will call the other scripts and should be run in numerical order.
+The Exog_seq_selection bash script is a pipeline that will call the other scripts. A FASTA file of global sequences needs to be supplied in the output directory. The output directory and a code for the region of interest (e.g. 'Dane' or 'Milwaukee') also need to be piped into the bash script. 
 
 Full credit for filter_fasta_by_list_of_headers.py goes to StackExchange user 
 [Kamil S Jaron](https://bioinformatics.stackexchange.com/users/57/kamil-s-jaron)
